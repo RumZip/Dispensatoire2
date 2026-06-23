@@ -18,7 +18,9 @@ from vehicule import Vehicule, VoitureElectrique, Camion
 # principe ouvert/fermé : ajouter un type = une ligne ici, sans toucher
 # à la fabrique (vs une cascade if/elif à éditer en son cœur).
 _FABRIQUES = {
-    ...
+    "Vehicule" : Vehicule,
+    "VoitureElectrique" : VoitureElectrique,
+    "Camion" : Camion,
 }
 
 
@@ -26,18 +28,24 @@ def vehicule_depuis_dict(donnees):
     # Lire le champ « type », choisir la classe dans le registre, puis
     # déléguer à sa classmethod from_dict. Type absent ou inconnu -> erreur.
     # Même rôle que livre_depuis_dict.
-    ...
-
+    type_vehicule = donnees.get("type")
+    if type_vehicule not in _FABRIQUES:
+        raise ValueError(f"Type de vehicule inconnu")
+    return _FABRIQUES[type_vehicule].from_dict(donnees)
 
 # --- Persistance JSON ---
 
 def sauvegarder_flotte_json(vehicules, chemin):
     # Transformer chaque véhicule par SON to_dict (dispatch polymorphe,
     # sans test de type), puis écrire la liste de dicts en JSON.
-    ...
+    donnees = [vehicule.to_dict()for vehicule in vehicules]
+    with open(chemin, "w", encoding="utf-8") as fichier: 
+        json.dump(donnees, fichier, ensure_ascii=False, indent=2)
 
 
 def charger_flotte_json(chemin):
     # Relire le JSON et confier chaque dict à la fabrique, qui restitue le
     # type exact d'origine. Un parc mélangé revient à l'identique.
-    ...
+    with open(chemin, "r", encoding="utf-8") as fichier:
+        donnees = json.load(fichier)
+    return [vehicule_depuis_dict(entree) for entree in donnees]
